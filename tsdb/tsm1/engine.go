@@ -799,8 +799,9 @@ func (e *Engine) WriteSnapshot(ctx context.Context, status CacheStatus) error {
 	if err != nil && err != errCompactionsDisabled {
 		e.logger.Info("Error writing snapshot", zap.Error(err))
 	}
-	e.compactionTracker.SnapshotAttempted(err == nil || err == errCompactionsDisabled ||
-		err == ErrSnapshotInProgress, status, time.Since(start))
+	e.compactionTracker.SnapshotAttempted(
+		err == nil || err == errCompactionsDisabled || err == ErrSnapshotInProgress,
+		status, time.Since(start))
 
 	if err != nil {
 		return err
@@ -920,6 +921,24 @@ func (e *Engine) compactCache() {
 	}
 }
 
+func (e *Engine) Backup(ctx context.Context) error {
+	span, ctx := tracing.StartSpanFromContextWithOperationName(context.Background(), "compact cache")
+	span.LogKV("path", e.path)
+
+	err := e.WriteSnapshot(ctx, CacheStatusBackup)
+	if err != nil {
+		return err
+	}
+
+	snapshotPath, err := e.FileStore.CreateSnapshot(ctx)
+	if err != nil {
+		return err
+	}
+	e.logger.Error(snapshotPath)
+
+	return nil
+}
+
 // CacheStatus describes the current state of the cache, with respect to whether
 // it is ready to be snapshotted or not.
 type CacheStatus int
@@ -932,6 +951,7 @@ const (
 	CacheStatusColdNoWrites                      // The cache has not been written to for long enough that it should be snapshotted.
 	CacheStatusRetention                         // The cache was snapshotted before running retention.
 	CacheStatusFullCompaction                    // The cache was snapshotted as part of a full compaction.
+	CacheStatusBackup                            // The cache was snapshotted before running backup.
 )
 
 // ShouldCompactCache returns a status indicating if the Cache should be

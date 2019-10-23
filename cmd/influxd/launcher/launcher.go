@@ -577,6 +577,7 @@ func (m *Launcher) run(ctx context.Context) (err error) {
 
 	var deleteService platform.DeleteService
 	var pointsWriter storage.PointsWriter
+	var backupService platform.BackupService
 	{
 		m.engine = storage.NewEngine(m.enginePath, m.StorageConfig, storage.WithRetentionEnforcer(bucketSvc))
 		m.engine.WithLogger(m.logger)
@@ -590,6 +591,7 @@ func (m *Launcher) run(ctx context.Context) (err error) {
 
 		pointsWriter = m.engine
 		deleteService = m.engine
+		backupService = m.engine
 
 		// TODO(cwolff): Figure out a good default per-query memory limit:
 		//   https://github.com/influxdata/influxdb/issues/13642
@@ -800,6 +802,7 @@ func (m *Launcher) run(ctx context.Context) (err error) {
 		NewQueryService:      source.NewQueryService,
 		PointsWriter:         pointsWriter,
 		DeleteService:        deleteService,
+		BackupService:        backupService,
 		AuthorizationService: authSvc,
 		// Wrap the BucketService in a storage backed one that will ensure deleted buckets are removed from the storage engine.
 		BucketService:                   storage.NewBucketService(bucketSvc, m.engine),

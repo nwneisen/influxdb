@@ -662,6 +662,10 @@ func (e *Engine) deleteBucketRangeLocked(ctx context.Context, orgID, bucketID pl
 	return e.engine.DeletePrefixRange(ctx, name, min, max, pred)
 }
 
+func (e *Engine) Backup(ctx context.Context) error {
+	return e.engine.Backup(ctx)
+}
+
 // SeriesCardinality returns the number of series in the engine.
 func (e *Engine) SeriesCardinality() int64 {
 	e.mu.RLock()
