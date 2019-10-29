@@ -39,10 +39,9 @@ func TestCheckpointError(t *testing.T) {
 
 func TestLast(t *testing.T) {
 	want := time.Now()
-	s := want.Format(time.RFC3339Nano)
 	mockService := &mock.TaskService{
 		FindTaskByIDFn: func(context.Context, influxdb.ID) (*influxdb.Task, error) {
-			return &influxdb.Task{LatestCompleted: s}, nil
+			return &influxdb.Task{LatestCompleted: want}, nil
 		},
 	}
 
@@ -67,19 +66,5 @@ func TestLastFetchError(t *testing.T) {
 	_, err := cp.Last(context.Background(), influxdb.ID(1))
 	if err == nil {
 		t.Fatal("expected error")
-	}
-}
-
-func TestLastParseError(t *testing.T) {
-	mockService := &mock.TaskService{
-		FindTaskByIDFn: func(context.Context, influxdb.ID) (*influxdb.Task, error) {
-			return &influxdb.Task{LatestCompleted: "howdy"}, nil
-		},
-	}
-
-	cp := backend.NewTaskServiceCheckpointer(mockService)
-	_, err := cp.Last(context.Background(), influxdb.ID(1))
-	if err == nil {
-		t.Fatalf("expected error parsing invalid time: %v", err)
 	}
 }

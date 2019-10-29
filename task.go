@@ -42,12 +42,12 @@ type Task struct {
 	Flux            string                 `json:"flux"`
 	Every           string                 `json:"every,omitempty"`
 	Cron            string                 `json:"cron,omitempty"`
-	Offset          string                 `json:"offset,omitempty"`
-	LatestCompleted string                 `json:"latestCompleted,omitempty"`
 	LastRunStatus   string                 `json:"lastRunStatus,omitempty"`
 	LastRunError    string                 `json:"lastRunError,omitempty"`
-	CreatedAt       string                 `json:"createdAt,omitempty"`
-	UpdatedAt       string                 `json:"updatedAt,omitempty"`
+	Offset          time.Duration          `json:"offset,omitempty"`
+	LatestCompleted time.Time              `json:"latestCompleted,omitempty"`
+	CreatedAt       time.Time              `json:"createdAt,omitempty"`
+	UpdatedAt       time.Time              `json:"updatedAt,omitempty"`
 	Metadata        map[string]interface{} `json:"metadata,omitempty"`
 }
 
@@ -119,23 +119,6 @@ func (t *Task) TaskEffectiveCron() (string, error) {
 		return fmt.Sprintf("*/%d */%d */%d * * * *", ts.seconds, ts.minutes, ts.hours), nil
 	}
 	return "", errors.New("either every or cron must be set")
-}
-
-// LatestCompletedTime gives the time.Time that the task was last queued to be run in RFC3339 format.
-func (t *Task) LatestCompletedTime() (time.Time, error) {
-	tm := t.LatestCompleted
-	if tm == "" {
-		tm = t.CreatedAt
-	}
-	return time.Parse(time.RFC3339, tm)
-}
-
-// OffsetDuration gives the time.Duration of the Task's Offset property, which represents a delay before execution
-func (t *Task) OffsetDuration() (time.Duration, error) {
-	if t.Offset == "" {
-		return time.Duration(0), nil
-	}
-	return time.ParseDuration(t.Offset)
 }
 
 // Run is a record createId when a run of a task is scheduled.
@@ -231,7 +214,7 @@ type TaskUpdate struct {
 	Description *string `json:"description,omitempty"`
 
 	// LatestCompleted us to set latest completed on startup to skip task catchup
-	LatestCompleted *string                `json:"-"`
+	LatestCompleted *time.Time             `json:"-"`
 	LastRunStatus   *string                `json:"-"`
 	LastRunError    *string                `json:"-"`
 	Metadata        map[string]interface{} `json:"-"` // not to be set through a web request but rather used by a http service using tasks backend.

@@ -21,9 +21,8 @@ func NewTaskServiceCheckpointer(ts influxdb.TaskService) *TaskServiceCheckpointe
 
 // Checkpoint updates a task's LatestCompleted value with the given time
 func (c *TaskServiceCheckpointer) Checkpoint(ctx context.Context, id influxdb.ID, t time.Time) error {
-	s := t.Format(time.RFC3339Nano)
 	_, err := c.ts.UpdateTask(ctx, id, influxdb.TaskUpdate{
-		LatestCompleted: &s,
+		LatestCompleted: &t,
 	})
 
 	if err != nil {
@@ -39,9 +38,5 @@ func (c *TaskServiceCheckpointer) Last(ctx context.Context, id influxdb.ID) (tim
 		return time.Time{}, fmt.Errorf("could not fetch task: %v", err)
 	}
 
-	last, err := time.Parse(time.RFC3339Nano, task.LatestCompleted)
-	if err != nil {
-		return time.Time{}, fmt.Errorf("internal server error: corrupt LastCompleted format: %v", err)
-	}
-	return last, nil
+	return task.LatestCompleted, nil
 }

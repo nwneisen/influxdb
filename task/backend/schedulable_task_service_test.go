@@ -16,7 +16,7 @@ var (
 )
 
 func (m MockTaskService) UpdateTask(_ context.Context, id influxdb.ID, _ influxdb.TaskUpdate) (*influxdb.Task, error) {
-	return &influxdb.Task{ID: id, UpdatedAt: mockTimeNowStr}, nil
+	return &influxdb.Task{ID: id, UpdatedAt: mockTimeNow}, nil
 }
 
 type MockTaskService struct{}

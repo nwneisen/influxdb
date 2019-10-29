@@ -245,7 +245,7 @@ func testTaskCRUD(t *testing.T, sys *System) {
 		OwnerID:         tsk.OwnerID,
 		Name:            "task #0",
 		Cron:            "* * * * *",
-		Offset:          "5s",
+		Offset:          0 * time.Second,
 		Status:          string(backend.DefaultTaskStatus),
 		Flux:            fmt.Sprintf(scriptFmt, 0),
 		Type:            influxdb.TaskSystemType,
@@ -503,7 +503,7 @@ from(bucket: "b")
 		if err != nil {
 			t.Fatal(err)
 		}
-		if fNoOffset.Offset != "" {
+		if fNoOffset.Offset != 0*time.Second {
 			t.Fatal("removing offset failed")
 		}
 	})
@@ -535,19 +535,13 @@ func testUpdate(t *testing.T, sys *System) {
 	after := time.Now()
 	latestCA := after.Add(time.Second)
 
-	ca, err := time.Parse(time.RFC3339, st.CreatedAt)
-	if err != nil {
-		t.Fatal(err)
-	}
+	ca := st.CreatedAt
 
 	if earliestCA.After(ca) || latestCA.Before(ca) {
 		t.Fatalf("createdAt not accurate, expected %s to be between %s and %s", ca, earliestCA, latestCA)
 	}
 
-	ti, err := time.Parse(time.RFC3339, st.LatestCompleted)
-	if err != nil {
-		t.Fatal(err)
-	}
+	ti := st.LatestCompleted
 
 	if now.Sub(ti) > 10*time.Second {
 		t.Fatalf("latest completed not accurate, expected: ~%s, got %s", now, ti)
@@ -577,7 +571,7 @@ func testUpdate(t *testing.T, sys *System) {
 		t.Fatal(err)
 	}
 
-	if st2.LatestCompleted <= st.LatestCompleted {
+	if st2.LatestCompleted.Before(st.LatestCompleted) {
 		t.Fatalf("executed task has not updated latest complete: expected %s > %s", st2.LatestCompleted, st.LatestCompleted)
 	}
 
@@ -642,10 +636,7 @@ func testUpdate(t *testing.T, sys *System) {
 	earliestUA := now.Add(-time.Second)
 	latestUA := after.Add(time.Second)
 
-	ua, err := time.Parse(time.RFC3339, task.UpdatedAt)
-	if err != nil {
-		t.Fatal(err)
-	}
+	ua := task.UpdatedAt
 
 	if earliestUA.After(ua) || latestUA.Before(ua) {
 		t.Fatalf("updatedAt not accurate, expected %s to be between %s and %s", ua, earliestUA, latestUA)
@@ -656,10 +647,7 @@ func testUpdate(t *testing.T, sys *System) {
 		t.Fatal(err)
 	}
 
-	ua, err = time.Parse(time.RFC3339, st.UpdatedAt)
-	if err != nil {
-		t.Fatal(err)
-	}
+	ua = st.UpdatedAt
 
 	if earliestUA.After(ua) || latestUA.Before(ua) {
 		t.Fatalf("updatedAt not accurate after pulling new task, expected %s to be between %s and %s", ua, earliestUA, latestUA)
