@@ -613,7 +613,7 @@ func testUpdate(t *testing.T, sys *System) {
 		t.Fatal(err)
 	}
 
-	if st3.LatestCompleted <= st2.LatestCompleted {
+	if st3.LatestCompleted.Before(st2.LatestCompleted) {
 		t.Fatalf("executed task has not updated latest complete: expected %s > %s", st3.LatestCompleted, st2.LatestCompleted)
 	}
 

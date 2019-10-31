@@ -16,8 +16,7 @@ var (
 	three = influxdb.ID(3)
 	four  = influxdb.ID(4)
 
-	aTime      = time.Now()
-	aTimeStamp = aTime.Format(time.RFC3339)
+	aTime = time.Now()
 
 	taskOne   = &influxdb.Task{ID: one}
 	taskTwo   = &influxdb.Task{ID: two, Status: "active"}

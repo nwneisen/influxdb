@@ -153,10 +153,7 @@ func TestTaskHandler_handleGetTasks(t *testing.T) {
       "orgID": "0000000000000001",
       "ownerID": "0000000000000001",
       "org": "test",
-	  "status": "",
-	  "createdAt": "0001-01-01T00:00:00Z",
-      "latestCompleted": "0001-01-01T00:00:00Z",
-      "updatedAt": "0001-01-01T00:00:00Z",
+      "status": "",
       "flux": ""
     },
     {
@@ -182,10 +179,7 @@ func TestTaskHandler_handleGetTasks(t *testing.T) {
 	  "orgID": "0000000000000002",
 	  "ownerID": "0000000000000002",
 	  "org": "test",
-	  "status": "",
-	  "createdAt": "0001-01-01T00:00:00Z",
-      "latestCompleted": "0001-01-01T00:00:00Z",
-      "updatedAt": "0001-01-01T00:00:00Z",
+      "status": "",
       "flux": ""
     }
   ]
@@ -259,10 +253,7 @@ func TestTaskHandler_handleGetTasks(t *testing.T) {
 	  "orgID": "0000000000000002",
 	  "ownerID": "0000000000000002",
       "org": "test",
-	  "status": "",
-	  "createdAt": "0001-01-01T00:00:00Z",
-      "latestCompleted": "0001-01-01T00:00:00Z",
-      "updatedAt": "0001-01-01T00:00:00Z",
+      "status": "",
       "flux": ""
     }
   ]
@@ -335,10 +326,7 @@ func TestTaskHandler_handleGetTasks(t *testing.T) {
 	  "orgID": "0000000000000002",
 	  "ownerID": "0000000000000002",
 	  "org": "test2",
-	  "status": "",
-	  "createdAt": "0001-01-01T00:00:00Z",
-      "latestCompleted": "0001-01-01T00:00:00Z",
-      "updatedAt": "0001-01-01T00:00:00Z",
+      "status": "",
       "flux": ""
     }
   ]
@@ -494,9 +482,6 @@ func TestTaskHandler_handlePostTasks(t *testing.T) {
   "ownerID": "0000000000000001",
   "org": "test",
   "status": "",
-  "createdAt": "0001-01-01T00:00:00Z",
-  "latestCompleted": "0001-01-01T00:00:00Z",
-  "updatedAt": "0001-01-01T00:00:00Z",
   "flux": "abc"
 }
 `,

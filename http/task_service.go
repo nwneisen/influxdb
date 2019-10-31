@@ -155,10 +155,68 @@ func NewTaskHandler(b *TaskBackend) *TaskHandler {
 type taskResponse struct {
 	Links  map[string]string `json:"links"`
 	Labels []influxdb.Label  `json:"labels"`
-	influxdb.Task
+	httpTask
+}
+
+type httpTask struct {
+	ID              influxdb.ID             `json:"id"`
+	Type            string                  `json:"type,omitempty"`
+	OrganizationID  influxdb.ID             `json:"orgID"`
+	Organization    string                  `json:"org"`
+	AuthorizationID influxdb.ID             `json:"-"`
+	Authorization   *influxdb.Authorization `json:"-"`
+	OwnerID         influxdb.ID             `json:"ownerID"`
+	Name            string                  `json:"name"`
+	Description     string                  `json:"description,omitempty"`
+	Status          string                  `json:"status"`
+	Flux            string                  `json:"flux"`
+	Every           string                  `json:"every,omitempty"`
+	Cron            string                  `json:"cron,omitempty"`
+	LastRunStatus   string                  `json:"lastRunStatus,omitempty"`
+	LastRunError    string                  `json:"lastRunError,omitempty"`
+	Offset          *time.Duration          `json:"offset,omitempty"`
+	LatestCompleted *time.Time              `json:"latestCompleted,omitempty"`
+	CreatedAt       *time.Time              `json:"createdAt,omitempty"`
+	UpdatedAt       *time.Time              `json:"updatedAt,omitempty"`
+	Metadata        map[string]interface{}  `json:"metadata,omitempty"`
 }
 
 func newTaskResponse(t influxdb.Task, labels []*influxdb.Label) taskResponse {
+	task := httpTask{
+		ID:              t.ID,
+		Type:            t.Type,
+		OrganizationID:  t.OrganizationID,
+		Organization:    t.Organization,
+		AuthorizationID: t.AuthorizationID,
+		Authorization:   t.Authorization,
+		OwnerID:         t.OwnerID,
+		Name:            t.Name,
+		Description:     t.Description,
+		Status:          t.Status,
+		Flux:            t.Flux,
+		Every:           t.Every,
+		Cron:            t.Cron,
+		LastRunStatus:   t.LastRunStatus,
+		LastRunError:    t.LastRunError,
+		Metadata:        t.Metadata,
+	}
+
+	if !t.CreatedAt.IsZero() {
+		task.CreatedAt = &t.CreatedAt
+	}
+
+	if !t.UpdatedAt.IsZero() {
+		task.UpdatedAt = &t.UpdatedAt
+	}
+
+	if !t.LatestCompleted.IsZero() {
+		task.LatestCompleted = &t.LatestCompleted
+	}
+
+	if t.Offset.Seconds() != 0 {
+		task.Offset = &t.Offset
+	}
+
 	response := taskResponse{
 		Links: map[string]string{
 			"self":    fmt.Sprintf("/api/v2/tasks/%s", t.ID),
@@ -168,8 +226,8 @@ func newTaskResponse(t influxdb.Task, labels []*influxdb.Label) taskResponse {
 			"runs":    fmt.Sprintf("/api/v2/tasks/%s/runs", t.ID),
 			"logs":    fmt.Sprintf("/api/v2/tasks/%s/logs", t.ID),
 		},
-		Task:   t,
-		Labels: []influxdb.Label{},
+		httpTask: task,
+		Labels:   []influxdb.Label{},
 	}
 
 	for _, l := range labels {
@@ -177,6 +235,45 @@ func newTaskResponse(t influxdb.Task, labels []*influxdb.Label) taskResponse {
 	}
 
 	return response
+}
+
+func convertTask(t httpTask) *influxdb.Task {
+	task := &influxdb.Task{
+		ID:              t.ID,
+		Type:            t.Type,
+		OrganizationID:  t.OrganizationID,
+		Organization:    t.Organization,
+		AuthorizationID: t.AuthorizationID,
+		Authorization:   t.Authorization,
+		OwnerID:         t.OwnerID,
+		Name:            t.Name,
+		Description:     t.Description,
+		Status:          t.Status,
+		Flux:            t.Flux,
+		Every:           t.Every,
+		Cron:            t.Cron,
+		LastRunStatus:   t.LastRunStatus,
+		LastRunError:    t.LastRunError,
+		Metadata:        t.Metadata,
+	}
+
+	if t.CreatedAt != nil {
+		task.CreatedAt = *t.CreatedAt
+	}
+
+	if t.UpdatedAt != nil {
+		task.UpdatedAt = *t.UpdatedAt
+	}
+
+	if t.LatestCompleted != nil {
+		task.LatestCompleted = *t.LatestCompleted
+	}
+
+	if t.Offset != nil {
+		task.Offset = *t.Offset
+	}
+
+	return task
 }
 
 func newTasksPagingLinks(basePath string, ts []*influxdb.Task, f influxdb.TaskFilter) *influxdb.PagingLinks {
@@ -1347,7 +1444,7 @@ func (t TaskService) FindTaskByID(ctx context.Context, id influxdb.ID) (*influxd
 		return nil, err
 	}
 
-	return &tr.Task, nil
+	return convertTask(tr.httpTask), nil
 }
 
 // FindTasks returns a list of tasks that match a filter (limit 100) and the total count
@@ -1408,7 +1505,7 @@ func (t TaskService) FindTasks(ctx context.Context, filter influxdb.TaskFilter) 
 
 	tasks := make([]*influxdb.Task, len(tr.Tasks))
 	for i := range tr.Tasks {
-		tasks[i] = &tr.Tasks[i].Task
+		tasks[i] = convertTask(tr.Tasks[i].httpTask)
 	}
 	return tasks, len(tasks), nil
 }
@@ -1452,7 +1549,7 @@ func (t TaskService) CreateTask(ctx context.Context, tc influxdb.TaskCreate) (*i
 	if err := json.NewDecoder(resp.Body).Decode(&tr); err != nil {
 		return nil, err
 	}
-	return &tr.Task, nil
+	return convertTask(tr.httpTask), nil
 }
 
 // UpdateTask updates a single task with changeset.
@@ -1495,7 +1592,7 @@ func (t TaskService) UpdateTask(ctx context.Context, id influxdb.ID, upd influxd
 		return nil, err
 	}
 
-	return &tr.Task, nil
+	return convertTask(tr.httpTask), nil
 }
 
 // DeleteTask removes a task by ID and purges all associated data and scheduled runs.
