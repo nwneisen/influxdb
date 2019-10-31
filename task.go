@@ -42,10 +42,10 @@ type Task struct {
 	Flux            string                 `json:"flux"`
 	Every           string                 `json:"every,omitempty"`
 	Cron            string                 `json:"cron,omitempty"`
+	Offset          string                 `json:"offset,omitempty"`
+	LatestCompleted time.Time              `json:"latestCompleted,omitempty"`
 	LastRunStatus   string                 `json:"lastRunStatus,omitempty"`
 	LastRunError    string                 `json:"lastRunError,omitempty"`
-	Offset          time.Duration          `json:"offset,omitempty"`
-	LatestCompleted time.Time              `json:"latestCompleted,omitempty"`
 	CreatedAt       time.Time              `json:"createdAt,omitempty"`
 	UpdatedAt       time.Time              `json:"updatedAt,omitempty"`
 	Metadata        map[string]interface{} `json:"metadata,omitempty"`
@@ -119,6 +119,14 @@ func (t *Task) TaskEffectiveCron() (string, error) {
 		return fmt.Sprintf("*/%d */%d */%d * * * *", ts.seconds, ts.minutes, ts.hours), nil
 	}
 	return "", errors.New("either every or cron must be set")
+}
+
+// OffsetDuration gives the time.Duration of the Task's Offset property, which represents a delay before execution
+func (t *Task) OffsetDuration() (time.Duration, error) {
+	if t.Offset == "" {
+		return time.Duration(0), nil
+	}
+	return time.ParseDuration(t.Offset)
 }
 
 // Run is a record createId when a run of a task is scheduled.

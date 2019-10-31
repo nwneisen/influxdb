@@ -597,12 +597,7 @@ func (s *Service) createTask(ctx context.Context, tx Tx, tc influxdb.TaskCreate)
 		LatestCompleted: createdAt,
 	}
 	if opt.Offset != nil {
-		if offset, err := time.ParseDuration(opt.Offset.String()); err != nil {
-			task.Offset = offset
-		}
-		if err != nil {
-			return nil, influxdb.ErrTaskTimeParse(err)
-		}
+		task.Offset = opt.Offset.String()
 	}
 
 	taskBucket, err := tx.Bucket(taskBucket)
@@ -713,10 +708,10 @@ func (s *Service) updateTask(ctx context.Context, tx Tx, id influxdb.ID, upd inf
 		task.Name = options.Name
 		task.Every = options.Every.String()
 		task.Cron = options.Cron
-		if options.Offset != nil {
-			if offset, err := time.ParseDuration(options.Offset.String()); err != nil {
-				task.Offset = offset
-			}
+		if options.Offset == nil {
+			task.Offset = ""
+		} else {
+			task.Offset = options.Offset.String()
 		}
 		task.UpdatedAt = updatedAt
 	}
@@ -1322,7 +1317,7 @@ func (s *Service) createNextRun(ctx context.Context, tx Tx, taskID influxdb.ID, 
 
 	nextScheduled := sch.Next(time.Unix(scheduledFor, 0)).UTC()
 	offset := &options.Duration{}
-	if err := offset.Parse(task.Offset.String()); err != nil {
+	if err := offset.Parse(task.Offset); err != nil {
 		return backend.RunCreation{}, influxdb.ErrTaskTimeParse(err)
 	}
 	nextDueAt, err := offset.Add(nextScheduled)
@@ -1599,8 +1594,6 @@ func (s *Service) finishRun(ctx context.Context, tx Tx, taskID, runID influxdb.I
 			return nil
 		}(),
 	})
-
-	_, err = s.updateTask(ctx, tx, taskID, influxdb.TaskUpdate{LatestCompleted: &r.ScheduledFor})
 	if err != nil {
 		return nil, err
 	}
@@ -1685,7 +1678,7 @@ func (s *Service) nextDueRun(ctx context.Context, tx Tx, taskID influxdb.ID) (in
 
 	nextScheduled := sch.Next(latestCompleted).UTC()
 	offset := &options.Duration{}
-	if err := offset.Parse(task.Offset.String()); err != nil {
+	if err := offset.Parse(task.Offset); err != nil {
 		return 0, 0, influxdb.ErrTaskTimeParse(err)
 	}
 	dueAt, err := offset.Add(nextScheduled)

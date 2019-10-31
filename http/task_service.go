@@ -174,7 +174,7 @@ type httpTask struct {
 	Cron            string                  `json:"cron,omitempty"`
 	LastRunStatus   string                  `json:"lastRunStatus,omitempty"`
 	LastRunError    string                  `json:"lastRunError,omitempty"`
-	Offset          *time.Duration          `json:"offset,omitempty"`
+	Offset          string                  `json:"offset,omitempty"`
 	LatestCompleted *time.Time              `json:"latestCompleted,omitempty"`
 	CreatedAt       *time.Time              `json:"createdAt,omitempty"`
 	UpdatedAt       *time.Time              `json:"updatedAt,omitempty"`
@@ -198,6 +198,7 @@ func newTaskResponse(t influxdb.Task, labels []*influxdb.Label) taskResponse {
 		Cron:            t.Cron,
 		LastRunStatus:   t.LastRunStatus,
 		LastRunError:    t.LastRunError,
+		Offset:          t.Offset,
 		Metadata:        t.Metadata,
 	}
 
@@ -211,10 +212,6 @@ func newTaskResponse(t influxdb.Task, labels []*influxdb.Label) taskResponse {
 
 	if !t.LatestCompleted.IsZero() {
 		task.LatestCompleted = &t.LatestCompleted
-	}
-
-	if t.Offset.Seconds() != 0 {
-		task.Offset = &t.Offset
 	}
 
 	response := taskResponse{
@@ -252,6 +249,7 @@ func convertTask(t httpTask) *influxdb.Task {
 		Flux:            t.Flux,
 		Every:           t.Every,
 		Cron:            t.Cron,
+		Offset:          t.Offset,
 		LastRunStatus:   t.LastRunStatus,
 		LastRunError:    t.LastRunError,
 		Metadata:        t.Metadata,
@@ -267,10 +265,6 @@ func convertTask(t httpTask) *influxdb.Task {
 
 	if t.LatestCompleted != nil {
 		task.LatestCompleted = *t.LatestCompleted
-	}
-
-	if t.Offset != nil {
-		task.Offset = *t.Offset
 	}
 
 	return task

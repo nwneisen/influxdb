@@ -125,7 +125,14 @@ func (t *TaskControlService) createNextRun(task *influxdb.Task, now int64) (back
 	nextScheduled := sch.Next(time.Unix(latest, 0))
 	nextScheduledUnix := nextScheduled.Unix()
 
-	offset := task.Offset.Nanoseconds()
+	offset := int64(0)
+	if task.Offset != "" {
+		toff, err := time.ParseDuration(task.Offset)
+		if err == nil {
+			offset = toff.Nanoseconds()
+		}
+	}
+
 	if dueAt := nextScheduledUnix + int64(offset); dueAt > now {
 		return backend.RunCreation{}, influxdb.ErrRunNotDueYet(dueAt)
 	}
@@ -251,9 +258,14 @@ func (d *TaskControlService) nextDueRun(ctx context.Context, taskID influxdb.ID)
 	nextScheduled := sch.Next(time.Unix(latest, 0))
 	nextScheduledUnix := nextScheduled.Unix()
 
-	offset := task.Offset.Nanoseconds()
+	offset := int64(0)
+	if task.Offset != "" {
+		toff, err := time.ParseDuration(task.Offset)
+		if err == nil {
+			offset = toff.Nanoseconds()
+		}
+	}
 
-	fmt.Println("got next due run: ", nextScheduledUnix+int64(offset))
 	return nextScheduledUnix + int64(offset), nil
 }
 

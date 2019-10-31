@@ -477,7 +477,7 @@ func TestScheduler_Queue(t *testing.T) {
 			for _, rp := range e.RunningFor(task.ID) {
 				nows = append(nows, fmt.Sprint(rp.Run().Now))
 			}
-			t.Fatalf("polled but could not find run with now = %d in time; got: %s", expNow, strings.Join(nows, ", ")) // TODO (al)
+			t.Fatalf("polled but could not find run with now = %d in time; got: %s", expNow, strings.Join(nows, ", "))
 		}
 	}
 	pollForRun(180)

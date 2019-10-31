@@ -53,7 +53,8 @@ func (t SchedulableTask) Schedule() scheduler.Schedule {
 
 // Offset returns a time.Duration for the Task's offset property
 func (t SchedulableTask) Offset() time.Duration {
-	return t.Task.Offset
+	offset, _ := t.OffsetDuration()
+	return offset
 }
 
 // LastScheduled parses the task's LatestCompleted value as a Time object
@@ -69,6 +70,10 @@ func WithLimitOpt(i int) CoordinatorOption {
 
 // NewSchedulableTask transforms an influxdb task to a schedulable task type
 func NewSchedulableTask(task *influxdb.Task) (SchedulableTask, error) {
+	if offset, err := task.OffsetDuration(); offset != time.Duration(0) && err != nil {
+		return SchedulableTask{}, errors.New("could not create schedulable task: offset duration could not be parsed")
+	}
+
 	if task.Cron == "" && task.Every == "" {
 		return SchedulableTask{}, errors.New("invalid cron or every")
 	}

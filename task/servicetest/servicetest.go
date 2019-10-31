@@ -245,7 +245,7 @@ func testTaskCRUD(t *testing.T, sys *System) {
 		OwnerID:         tsk.OwnerID,
 		Name:            "task #0",
 		Cron:            "* * * * *",
-		Offset:          0 * time.Second,
+		Offset:          "5s",
 		Status:          string(backend.DefaultTaskStatus),
 		Flux:            fmt.Sprintf(scriptFmt, 0),
 		Type:            influxdb.TaskSystemType,
@@ -503,7 +503,7 @@ from(bucket: "b")
 		if err != nil {
 			t.Fatal(err)
 		}
-		if fNoOffset.Offset != 0*time.Second {
+		if fNoOffset.Offset != "" {
 			t.Fatal("removing offset failed")
 		}
 	})
