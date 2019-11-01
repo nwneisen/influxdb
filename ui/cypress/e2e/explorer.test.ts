@@ -40,7 +40,7 @@ describe('DataExplorer', () => {
       cy.get('.cf-dropdown--selected')
         .contains('Past 1')
         .should('have.length', 1)
-      cy.getByTestID('timerange-popover--dialog').should('have.length', 0)
+      cy.getByTestID('timerange-popover--dialog').should('not.exist')
       cy.getByTestID('timerange-dropdown').click()
 
       cy.getByTestID('dropdown-item-past15m').click()
@@ -50,7 +50,7 @@ describe('DataExplorer', () => {
 
       cy.getByTestID('timerange-dropdown').click()
 
-      cy.getByTestID('timerange-popover--dialog').should('have.length', 0)
+      cy.getByTestID('timerange-popover--dialog').should('not.exist')
 
       cy.getByTestID('dropdown-item-customtimerange').click()
       cy.getByTestID('timerange-popover--dialog').should('have.length', 1)
@@ -92,7 +92,7 @@ describe('DataExplorer', () => {
         // TODO: complete with issue #15632
         // https://github.com/influxdata/influxdb/issues/15632
         // default inputs should be valid
-        cy.getByTestID('input-error').should('have.length', 0)
+        cy.getByTestID('input-error').should('not.exist')
 
         // type incomplete input
         cy.get('input[title="Start"]')
@@ -107,7 +107,7 @@ describe('DataExplorer', () => {
         cy.get('input[title="Start"]').type('-01')
 
         // warnings should not appear
-        cy.getByTestID('input-error').should('have.length', 0)
+        cy.getByTestID('input-error').should('not.exist')
 
         // type invalid stop date
         cy.get('input[title="Stop"]')
@@ -191,6 +191,27 @@ describe('DataExplorer', () => {
       )
 
       cy.getByTestID('query-builder').should('exist')
+    })
+
+    it('should display the popover when hovering', () => {
+      cy.getByTestID('selector-list my_meas')
+        .click()
+        .then(() => {
+          cy.getByTestID('selector-list my_field')
+            .click()
+            .then(() => {
+              cy.getByTestID('switch-to-script-editor').click()
+              cy.getByTestID('flux-editor').should('exist')
+
+              cy.getByTestID('toolbar-popover--contents').should('not.exist')
+
+              cy.getByTestID('flux-function aggregateWindow').trigger(
+                'mouseover'
+              )
+
+              cy.getByTestID('toolbar-popover--contents').should('exist')
+            })
+        })
     })
   })
 
@@ -393,6 +414,50 @@ describe('DataExplorer', () => {
 
         cy.getByTestID('empty-graph--error').should('exist')
       })
+    })
+  })
+
+  describe('delete with predicate', () => {
+    beforeEach(() => {
+      cy.getByTestID('delete-data-predicate').click()
+      cy.getByTestID('overlay--container').should('have.length', 1)
+    })
+
+    it('requires consent to perform delete with predicate', () => {
+      // confirm delete is disabled
+      cy.getByTestID('confirm-delete-btn').should('be.disabled')
+      // checks the consent input
+      cy.getByTestID('delete-checkbox').check({force: true})
+      // can delete
+      cy.getByTestID('confirm-delete-btn')
+        .should('not.be.disabled')
+        .click()
+    })
+
+    it('closes the overlay upon a successful delete with predicate submission', () => {
+      cy.getByTestID('delete-checkbox').check({force: true})
+      cy.getByTestID('confirm-delete-btn').click()
+      cy.getByTestID('overlay--container').should('not.exist')
+      cy.getByTestID('notification-success').should('have.length', 1)
+    })
+
+    it('should require key-value pairs when deleting predicate with filters', () => {
+      // confirm delete is disabled
+      cy.getByTestID('add-filter-btn').click()
+      // checks the consent input
+      cy.getByTestID('delete-checkbox').check({force: true})
+      // cannot delete
+      cy.getByTestID('confirm-delete-btn').should('be.disabled')
+
+      // should display warnings
+      cy.getByTestID('form--element-error').should('have.length', 2)
+
+      cy.getByTestID('key-input').type('mean')
+      cy.getByTestID('value-input').type(100)
+
+      cy.getByTestID('confirm-delete-btn')
+        .should('not.be.disabled')
+        .click()
     })
   })
 })
